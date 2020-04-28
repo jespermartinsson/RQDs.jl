@@ -5,57 +5,21 @@ using Random
 using Distributions
 
 
+
 Random.seed!(1)
 
 
+# testing the function
+λ = 0.3 # mean length of intact core pieces
+d_in = 0.1 #  
+N = 1_000_000 # number of Monte Carlo simulations
+rqds = gen_rqds(λ, d_in, N)
 
-
-function gen_rqds(λ,d_in,N)
-    xs = rand(Exponential(λ),N)
-    rqds = Float64[]
-
-    l_in = 0.0
-    l_tot = 0.0
-    d_tot = 2.0
-
-    for x in xs
-        if l_tot == 0 && x > d_tot 
-            push!(rqds, 1.0)
-            continue
-        end
-            
-        l_tot += x
-        x_end = 0
-        
-        if l_tot < d_tot
-            if x > d_in
-                l_in += x
-            end
-        else
-            x_end = l_tot - x - d_tot
-            if x_end > d_in
-                l_in += x_end
-            end
-            
-            push!(rqds, l_in/d_tot)
-            l_in = 0.0
-            l_tot = 0.0
-            
-        end
-        # println(x)
-        # println(x_end)
-        # println(l_tot)
-        # println(l_in)
-        # println(rqd)
-    end
-    return rqds
-end
-
-
-rqds = gen_rqds(1.0,0.1,100_000)
 figure()
 hist(rqds,round(Int,sqrt(length(rqds))))
+xlabel("RQD")
 
+# create a convertation plot in 2D and 3D
 λs = 0.01:0.01:10.0
 factors = Float64[]
 rqds_10 = Float64[]
@@ -70,6 +34,7 @@ for λ in λs
     push!(rqds_10,rqd_10)
     push!(rqds_6,rqd_6)
 end
+
 
 figure()
 plot(rqds_10,rqds_6,".-")
