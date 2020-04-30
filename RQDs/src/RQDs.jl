@@ -5,45 +5,54 @@ using Random
 using Distributions
 
 
-export gen_rqds
+export evaluate_rqd, pieces_to_slots
 
-function gen_rqds(λ,d_in,N)
-    xs = rand(Exponential(λ),N)
-    rqds = Float64[]
 
-    l_in = 0.0
-    l_tot = 0.0
-    d_tot = 2.0
+function pieces_to_slots(pieces, slot_length = 2.0)
 
-    for x in xs
-        if l_tot == 0 && x > d_tot 
-            push!(rqds, 1.0)
-            continue
-        end
-            
-        l_tot += x
-        x_end = 0
-        
-        if l_tot < d_tot
-            if x > d_in
-                l_in += x
-            end
+    slots = Vector{Vector{Float64}}(undef,0)
+    slot = Float64[]
+    
+    l = 0.0
+    for piece in pieces
+        l += piece
+        if l <= slot_length
+            push!(slot,piece)
         else
-            x_end = l_tot - x - d_tot
-            if x_end > d_in
-                l_in += x_end
+            outside = l - slot_length
+            while outside > slot_length 
+                push!(slots,Float64[slot_length])
+                outside -= slot_length
+                piece -= slot_length  
             end
-            
-            push!(rqds, l_in/d_tot)
-            l_in = 0.0
-            l_tot = 0.0
-            
+            if outside < slot_length
+                inside = piece - outside  
+                push!(slot,inside)
+                push!(slots,slot)
+                slot = Float64[outside]
+                l = outside
+            else
+
+            end
         end
-        # println(x)
-        # println(x_end)
-        # println(l_tot)
-        # println(l_in)
-        # println(rqd)
+    end
+    return slots
+end
+
+
+function evaluate_rqd(slots, d_in)
+    slot_length = sum(slots[1])
+    N = length(slots)
+    rqds = Vector{Float64}(undef,N)
+
+    for i in 1:N
+        l_in = 0.0
+        for piece in slots[i]
+            if piece > d_in
+                l_in += piece
+            end
+        end
+        rqds[i] = l_in/slot_length
     end
     return rqds
 end
